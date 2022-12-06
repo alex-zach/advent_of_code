@@ -1,0 +1,20 @@
+[tool.pdm]
+
+[tool.pdm.scripts]
+start = {cmd = "python3 -B -m src.main"}
+test = {cmd = "python3 -B -m src.main --test-all"}
+
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "Alexander Zach", email = "alexander.zach1@gmail.com"},
+]
+dependencies = [
+    "argparse>=1.4.0",
+    "termcolor>=2.1.1",
+]
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
