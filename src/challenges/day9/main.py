@@ -26,36 +26,7 @@ class Challenge(ChallengeBase):
         return moves
             
     def solve1(self, moves):
-        head = [0,0]
-        tail = [0,0]
-        tail_set = set()
-        tail_set.add(tuple(tail))
-
-        for dir, cnt in moves:
-            if dir == 'U':
-                x_dir, y_dir = 0, 1
-            elif dir == 'D':
-                x_dir, y_dir = 0, -1
-            elif dir == 'R':
-                x_dir, y_dir = 1, 0
-            else:
-                x_dir, y_dir = -1, 0
-
-            for _ in range(cnt):
-                head[0] += x_dir
-                head[1] += y_dir
-
-                euclid_norm_sq = (head[0] - tail[0]) ** 2 + (head[1] - tail[1]) ** 2
-
-                if euclid_norm_sq >= 4:
-                    if head[0] - tail[0] != 0:
-                        tail[0] += sign(head[0] - tail[0])
-                    if head[1] - tail[1] != 0:
-                        tail[1] += sign(head[1] - tail[1])
-
-                tail_set.add(tuple(tail))
-
-        return len(tail_set)
+        return self.solve2(moves, 2)
 
     
     def solve2(self, moves, rope_len=10):
