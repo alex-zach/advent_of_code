@@ -1,3 +1,4 @@
+from copy import deepcopy
 from os import path
 from termcolor import colored
 
@@ -32,8 +33,9 @@ class ChallengeBase:
 
     def _solve(self, input_name):
         inp = self._get_input(input_name)
+        inp2 = deepcopy(inp)
 
-        return self.solve1(inp), self.solve2(inp)
+        return self.solve1(inp), self.solve2(inp2)
 
     def test(self, prefix="", output=True):
         solutions = []
