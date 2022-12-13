@@ -6,24 +6,26 @@ import datetime
 from termcolor import colored
 from os import path
 
+available_years = list(sorted(os.listdir(path.join(path.dirname(__file__), 'challenges'))))
 
 parser = argparse.ArgumentParser(description='Runs Advent of Code solutions', add_help=True)
 
 parser.add_argument('-st', '--skip-test', help="Skips the tests", action='store_true')
 parser.add_argument('-sr', '--skip-run', help="Skips the run of the actual input", action='store_true')
 parser.add_argument('-ta', '--test-all', help="Runs all tests for all challenges", action='store_true')
+parser.add_argument('-y', '--year', help="Set the year", nargs=1, default=str(datetime.date.today().year), choices=available_years)
 parser.add_argument('days', nargs='*', default=[str(datetime.date.today().day)], help="Days that should be executed, default is current day")
 
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    available_challenges = list(sorted(os.listdir(path.join(path.dirname(__file__), 'challenges'))))
+    available_challenges = list(sorted(os.listdir(path.join(path.dirname(__file__), 'challenges', args.year))))
 
     if args.test_all:
         print('== Running all Tests ==')
         result_list = []
         for challenge in available_challenges:
-            c = importlib.import_module(f'.challenges.{challenge}', package=__package__).Challenge()
+            c = importlib.import_module(f'.challenges.{args.year}.{challenge}', package=__package__).Challenge()
             result_list.append(c.test(prefix = '  '))
         
         flatresults = [r for results in result_list for result in results for r in result ]
@@ -40,7 +42,7 @@ if __name__ == '__main__':
 
                 result_list = []
 
-                c = importlib.import_module(f'.challenges.day{day}', package=__package__).Challenge()
+                c = importlib.import_module(f'.challenges.{args.year}.day{day}', package=__package__).Challenge()
 
                 if not args.skip_test:
                     result_list.append(c.test(prefix = '  '))

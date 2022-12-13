@@ -1,7 +1,7 @@
 from functools import cmp_to_key
 import json
 
-from ...challenge_runner import ChallengeBase
+from ....challenge_runner import ChallengeBase
 
 
 class Challenge(ChallengeBase):

@@ -1,5 +1,5 @@
 import re
-from ...challenge_runner import ChallengeBase
+from ....challenge_runner import ChallengeBase
 
 
 class Challenge(ChallengeBase):

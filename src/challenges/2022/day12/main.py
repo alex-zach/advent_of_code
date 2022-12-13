@@ -1,7 +1,7 @@
 from platform import node
 import re
 
-from ...challenge_runner import ChallengeBase
+from ....challenge_runner import ChallengeBase
 
 
 class Graph:

@@ -6,7 +6,7 @@ from termcolor import colored
 class ChallengeBase:
     def __init__(self, file, expected_eg_outputs, eg_input_filenames=None) -> None:
         self._dirname = path.dirname(file)
-        self._challenge_name = path.basename(self._dirname)
+        self._challenge_name = f'{path.basename(path.dirname(self._dirname))}-{path.basename(self._dirname)}'
         self._eg_input_filenames = eg_input_filenames \
                                         if eg_input_filenames is not None \
                                         else ['input.eg']
@@ -93,5 +93,3 @@ class ChallengeBase:
             print()
 
         return solution
-
-
