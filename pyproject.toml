@@ -1,8 +1,9 @@
 [tool.pdm]
 
 [tool.pdm.scripts]
-start = {cmd = "python3 -B -m src.main"}
-test = {cmd = "python3 -B -m src.main --test-all"}
+start = {cmd = "python3 -B -m src.main run"}
+test = {cmd = "python3 -B -m src.main run --test-all"}
+create = {cmd = "python3 -B -m src.main create", env_file=".env"}
 
 [project]
 name = ""
@@ -14,6 +15,7 @@ authors = [
 dependencies = [
     "argparse>=1.4.0",
     "termcolor>=2.1.1",
+    "requests>=2.28.1",
 ]
 requires-python = ">=3.10"
 license = {text = "MIT"}
