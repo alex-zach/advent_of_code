@@ -2,6 +2,7 @@ import importlib
 import os
 import argparse
 import datetime
+from wsgiref import headers
 import requests
 
 from termcolor import colored
@@ -82,7 +83,7 @@ def execute_create(args):
 
         if session:
             try:
-                input_content = requests.get(INPUT_URL_FMT.format(year=args.year, day=args.day), cookies={'session': session}).text
+                input_content = requests.get(INPUT_URL_FMT.format(year=args.year, day=args.day), cookies={'session': session}, headers={'User-Agent': 'github.com/alex-zach/advent_of_code by alexander.zach1 (at) gmail.com'}).text
                 write_to_file('input.txt', input_content)
                 print(f'{colored("Fetched and created", "green")} Created input.txt')
             except:
