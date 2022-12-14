@@ -2,7 +2,6 @@ import importlib
 import os
 import argparse
 import datetime
-from wsgiref import headers
 import requests
 
 from termcolor import colored
