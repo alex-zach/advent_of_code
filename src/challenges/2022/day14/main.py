@@ -6,8 +6,6 @@ from ....challenge_runner import ChallengeBase
 
 def sign(x):
     return 1 if x > 0 else -1 if x < 0 else 0
-
-
 class Cave:
     def __init__(self, paths):
         self.grid = {}
@@ -53,24 +51,12 @@ class Cave:
     def drop_sand2(self, drop_pos):
         sand_x, sand_y = drop_pos
 
-        if self.get((sand_x,  sand_y)) != '.':
-            return False
+        if self.get(drop_pos) != '.' or sand_y > self.max_depth + 1:
+            return 0
+        self.set(drop_pos, 'o')
 
-        while sand_y < self.max_depth + 1:
-            if self.get((sand_x,sand_y+1)) == '.':
-                sand_y += 1
-            elif self.get((sand_x-1, sand_y+1)) == '.':
-                sand_x -= 1
-                sand_y += 1
-            elif self.get((sand_x+1, sand_y+1)) == '.':
-                sand_x += 1
-                sand_y += 1
-            else:
-                self.set((sand_x,sand_y), 'o')
-                return True
+        return 1 + self.drop_sand2((sand_x, sand_y+1)) + self.drop_sand2((sand_x-1, sand_y+1)) + self.drop_sand2((sand_x+1, sand_y+1))
 
-        self.set((sand_x, sand_y), 'o')
-        return True
 
     def __str__(self):
         xs = [int(x) for x in self.grid]
@@ -124,8 +110,4 @@ class Challenge(ChallengeBase):
     def solve2(self, paths):
         cave = Cave(paths)
 
-        cnt = 0
-        while cave.drop_sand2((500,0)):
-            cnt += 1
-
-        return cnt
+        return cave.drop_sand2((500,0))
