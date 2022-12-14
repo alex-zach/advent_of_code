@@ -1,7 +1,32 @@
 from copy import deepcopy
+from functools import wraps
 from os import path
+from time import time
 from termcolor import colored
 
+
+class Res:
+    def __init__(self, dur, res):
+        self.duration = dur
+        self.result = res
+
+    def format_duration(self):
+        if self.duration < 0.5:
+            return colored(f'{round(self.duration * 1000, 2)} ms', 'green')
+        if self.duration < 1:
+            return colored(f'{round(self.duration * 1000, 2)} ms', 'yellow')
+        return colored(f'{round(self.duration, 2)} s', 'red')
+
+
+def timed(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time()
+        res = func(*args, **kwargs)
+        duration = time() - start
+        return Res(duration, res)
+
+    return wrapper
 
 class ChallengeBase:
     def __init__(self, file, expected_eg_outputs, eg_input_filenames=None) -> None:
@@ -35,7 +60,7 @@ class ChallengeBase:
         inp = self._get_input(input_name)
         inp2 = deepcopy(inp)
 
-        return self.solve1(inp), self.solve2(inp2)
+        return timed(self.solve1)(inp), timed(self.solve2)(inp2)
 
     def test(self, prefix="", output=True):
         solutions = []
@@ -48,25 +73,27 @@ class ChallengeBase:
         if output:
             print(f'{prefix}{self._challenge_name} [test]')
 
-
         for lvl in range(2):
             if output:
                 print(f'{prefix}│')
 
-            if all([solution[lvl] is None for solution in solutions]):
-                print(f'{prefix}├── {lvl+1} {colored("skipped", "yellow")}')
+            if all([solution[lvl].result is None for solution in solutions]):
+                if output:
+                    print(f'{prefix}├── {lvl+1} {colored("skipped", "yellow")}')
             else:
                 for case in range(len(solutions)):
-                    if solutions[case][lvl] is None and output: 
-                        print(f'{prefix}├── {lvl+1}{f"[Case {case+1}]" if len(solutions) > 1 else ""} {colored("skipped", "yellow")}')
-                    elif str(solutions[case][lvl]) == str(self._expected_eg_outputs[case][lvl]) and output:
-                        print(f'{prefix}├── {lvl+1}{f"[Case {case+1}]" if len(solutions) > 1 else ""} {colored("passed", "green")}')
+                    if solutions[case][lvl].result is None:
+                        if output: 
+                            print(f'{prefix}├── {lvl+1}{f"[Case {case+1}]" if len(solutions) > 1 else ""} {colored("skipped", "yellow")}')
+                    elif str(solutions[case][lvl].result) == str(self._expected_eg_outputs[case][lvl]):
+                        if output:
+                            print(f'{prefix}├── {lvl+1}{f"[Case {case+1}]" if len(solutions) > 1 else ""} {colored("passed", "green")} ({solutions[case][lvl].format_duration()})')
                         results[case][lvl] = True
                     else:
                         if output:
-                            print(f'{prefix}├─┬ {lvl+1}{f"[Case {case+1}]" if len(solutions) > 1 else ""} {colored("failed", "red")}')
+                            print(f'{prefix}├─┬ {lvl+1}{f"[Case {case+1}]" if len(solutions) > 1 else ""} {colored("failed", "red")} ({solutions[case][lvl].format_duration()})')
                             print(f'{prefix}│ ├─ expected "{colored(self._expected_eg_outputs[case][lvl], "green")}"')
-                            print(f'{prefix}│ ├─ got      "{colored(solutions[case][lvl], "red")}"')
+                            print(f'{prefix}│ ├─ got      "{colored(solutions[case][lvl].result, "red")}"')
                         results[case][lvl] = False
 
         if output:
@@ -80,16 +107,14 @@ class ChallengeBase:
         if output:
             print(f'{prefix}{self._challenge_name} [run]')
 
-        for lvl in range(2):
-            if output:
+            for lvl in range(2):
                 print(f'{prefix}│')
 
-            if solution[lvl] is None: 
-                print(f'{prefix}├── {lvl+1} {colored("skipped", "yellow")}')
-            else:
-                print(f'{prefix}├── {lvl+1} {colored(solution[lvl], "blue")}')
-        
-        if output:
+                if solution[lvl] is None: 
+                    print(f'{prefix}├── {lvl+1} {colored("skipped", "yellow")}')
+                else:
+                    print(f'{prefix}├── {lvl+1} {colored(solution[lvl].result, "blue")} ({solution[lvl].format_duration()})')
+            
             print()
 
         return solution

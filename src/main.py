@@ -96,6 +96,7 @@ create_parser.set_defaults(func=execute_create)
 
 def test_all(year):
     available_challenges = list(sorted(os.listdir(path.join(path.dirname(__file__), 'challenges', year))))
+    available_challenges.sort(key=lambda x: int(x[3:]))
 
     print('== Running all Tests ==')
 
