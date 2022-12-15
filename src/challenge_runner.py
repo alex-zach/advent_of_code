@@ -1,4 +1,6 @@
+from __future__ import annotations
 from copy import deepcopy
+from errno import E2BIG
 from functools import wraps
 from os import path
 from time import time
@@ -28,6 +30,15 @@ def timed(func):
 
     return wrapper
 
+
+def is_eg_param(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    wrapper.eg_param = True
+    return wrapper
+
+
 class ChallengeBase:
     def __init__(self, file, expected_eg_outputs, eg_input_filenames=None) -> None:
         self._dirname = path.dirname(file)
@@ -56,18 +67,29 @@ class ChallengeBase:
             lines = f.readlines()
             return self.parse_input(lines)
 
-    def _solve(self, input_name):
+    def _solve(self, input_name, eg):
         inp = self._get_input(input_name)
         inp2 = deepcopy(inp)
 
-        return timed(self.solve1)(inp), timed(self.solve2)(inp2)
+        if hasattr(self.solve1, 'eg_param') and self.solve1.eg_param:
+            inp = (inp, eg)
+        else:
+            inp = (inp,)
+        
+        if hasattr(self.solve2, 'eg_param') and self.solve2.eg_param:
+            inp2 = (inp2, eg)
+        else:
+            inp2 = (inp2,)
+
+
+        return timed(self.solve1)(*inp), timed(self.solve2)(*inp2)
 
     def test(self, prefix="", output=True):
         solutions = []
         results = []
 
         for file in self._eg_input_filenames:
-            solutions.append(self._solve(file))
+            solutions.append(self._solve(file, True))
             results.append([None, None])
 
         if output:
@@ -102,7 +124,7 @@ class ChallengeBase:
         return results
 
     def run(self, prefix="", output=True):
-        solution = self._solve('input.txt')
+        solution = self._solve('input.txt', False)
 
         if output:
             print(f'{prefix}{self._challenge_name} [run]')
