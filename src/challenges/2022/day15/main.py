@@ -3,6 +3,11 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from ....challenge_runner import ChallengeBase, is_eg_param
 
+def norm1(a,b):
+    x1,y1 = a
+    x2,y2 = b
+    return abs(x1-x2) + abs(y1-y2)
+
 class Challenge(ChallengeBase):
     def __init__(self):
         super().__init__(__file__, ('26', '56000011'))
@@ -14,9 +19,12 @@ class Challenge(ChallengeBase):
         for line in lines:
             m = p.match(line)
             if m:
+                s = int(m.group(1)), int(m.group(2))
+                b = int(m.group(3)), int(m.group(4))
                 sensors.append((
-                    (int(m.group(1)), int(m.group(2))),
-                    (int(m.group(3)), int(m.group(4)))
+                    s,
+                    b,
+                    norm1(s,b)
                 ))
 
         return sensors
@@ -24,14 +32,10 @@ class Challenge(ChallengeBase):
     @is_eg_param
     def solve1(self, sensors, eg=False):
         target_y = 10 if eg else 2000000
-
-        def mapfunc(s):
-            (sx,sy),(bx,by)=s
-            return (sx,sy), abs(sx-bx) + abs(sy-by)
         
         x_blocked = []
-        for s in map(mapfunc, sensors):
-            (sx, sy), dist = s
+        for s in sensors:
+            (sx, sy), _, dist = s
             target_dist = abs(sy-target_y)
             if target_dist <= dist:
                 minx = sx-(dist-target_dist)
@@ -49,7 +53,7 @@ class Challenge(ChallengeBase):
 
         return sum([imax-imin+1 for imin, imax in x_blocked]) \
             - len(set([
-                (x,y) for (_,_), (x,y) in sensors \
+                (x,y) for _, (x,y), _ in sensors \
                     if y == target_y and any([x >= imin and x <= imax for imin, imax in x_blocked])
             ]))
 
@@ -57,22 +61,18 @@ class Challenge(ChallengeBase):
     def solve2(self, sensors, eg=False):
         min_xy = 0
         max_xy = 20 if eg else 4000000
-
-        def mapfunc(s):
-            (sx,sy),(bx,by)=s
-            return (sx,sy), abs(sx-bx) + abs(sy-by)
         
         # sort largest ball to smallest
-        sensors = list(sorted(map(mapfunc, sensors), key=lambda x: x[1], reverse=True))
+        sensors = list(sorted(sensors, key=lambda x: x[1], reverse=True))
 
         # remove subsets of other balls
         i = 0
         while i < len(sensors):
-            (sx,sy), dist = sensors[i]
+            (sx,sy), _, dist = sensors[i]
             delete = False
             for j in range(i):
-                (s2x, s2y), dist2 = sensors[j]
-                if abs(s2x-sx) + abs(s2y-sy) + dist <= dist2:
+                (s2x, s2y), _, dist2 = sensors[j]
+                if norm1((sx, sy), (s2x, s2y)) + dist <= dist2:
                     delete = True
                     break
             if delete:
@@ -84,7 +84,7 @@ class Challenge(ChallengeBase):
         def checkline(target_y):
             x_blocked = []
             for s in sensors:
-                (sx, sy), dist = s
+                (sx, sy), _, dist = s
                 target_dist = abs(sy-target_y)
                 if target_dist <= dist:
                     x_blocked.append((sx-(dist-target_dist), sx+(dist-target_dist)))
