@@ -25,19 +25,33 @@ class Challenge(ChallengeBase):
     def solve1(self, sensors, eg=False):
         target_y = 10 if eg else 2000000
 
-        beacons_x = set([s[1][0] for s in sensors if s[1][1] == target_y])
-        blocked = set()
-
-        for s in sensors:
-            (sx, sy), (bx, by) = s
-            dist = abs(sx-bx) + abs(sy-by)
+        def mapfunc(s):
+            (sx,sy),(bx,by)=s
+            return (sx,sy), abs(sx-bx) + abs(sy-by)
+        
+        x_blocked = []
+        for s in map(mapfunc, sensors):
+            (sx, sy), dist = s
             target_dist = abs(sy-target_y)
-            for i in range(-(dist-target_dist), dist-target_dist+1, 1):
-                blocked.add(sx+i)
+            if target_dist <= dist:
+                minx = sx-(dist-target_dist)
+                maxx = sx+(dist-target_dist)
+                i = 0
+                while i < len(x_blocked):
+                    imin, imax = x_blocked[i]
+                    if not imin > maxx and not imax < minx:
+                        x_blocked.pop(i)
+                        minx, maxx = min(imin, minx), max(imax, maxx)
+                    else:
+                        i += 1
 
-        blocked -= beacons_x
+                x_blocked.append((minx, maxx))
 
-        return len(blocked)
+        return sum([imax-imin+1 for imin, imax in x_blocked]) \
+            - len(set([
+                (x,y) for (_,_), (x,y) in sensors \
+                    if y == target_y and any([x >= imin and x <= imax for imin, imax in x_blocked])
+            ]))
 
     @is_eg_param
     def solve2(self, sensors, eg=False):
