@@ -1,7 +1,7 @@
 import re
 
 from math import inf
-from itertools import product
+from itertools import combinations
 from ....challenge_runner import ChallengeBase
 
 def dijkstra(valves, start):
@@ -35,7 +35,7 @@ def dijkstra(valves, start):
 
 class Challenge(ChallengeBase):
     def __init__(self):
-        super().__init__(__file__, ('1651', None))
+        super().__init__(__file__, ('1651', '1707'))
     
     def parse_input(self, lines):
         p = re.compile(r'Valve (\w+) has flow rate=(\d+); tunnels? leads? to valves? ([\w,\s]+)')
@@ -100,18 +100,38 @@ class Challenge(ChallengeBase):
                 if n == v: continue
                 clean_valves[v][1][n] = dists[n]
 
-        def recursion(remaining_minutes, current_valve1, current_valve2, open_valves, total_flow):
+        def recursion(remaining_minutes, current_valve, open_valves, total_flow):
             fpm = sum([clean_valves[v][0] for v in open_valves])
 
             if remaining_minutes == 0:
-                return 0
+                return [(total_flow, [])]
 
-            max_flow = total_flow + remaining_minutes * fpm
+            paths = []
+            paths.append((total_flow + remaining_minutes * fpm, []))
 
             if len(open_valves) + 1 < len(working_valves):
-                
+                for next_valve in clean_valves[current_valve][1]:
+                    if next_valve in open_valves: 
+                        continue
 
-            return max_flow
+                    open_duration = clean_valves[current_valve][1][next_valve]+1
+                    if open_duration > remaining_minutes:
+                        continue
 
-        res = recursion(minutes, 'AA', [], 0)
-        return res
+                    p = recursion(remaining_minutes-open_duration, next_valve, [next_valve, *open_valves], total_flow + open_duration * fpm)
+
+                    for d, pa in p:
+                        paths.append((d, [next_valve, *pa]))
+
+            return paths
+
+        res = recursion(minutes, 'AA', ['AA'], 0)
+        
+        visited_max = {}
+        
+        for flow, path in res:
+            norm_path = ",".join(sorted(path))
+            if norm_path not in visited_max or flow > visited_max[norm_path]:
+                visited_max[norm_path] = flow
+
+        return max([f1 + f2 for (p1, f1), (p2, f2) in combinations(visited_max.items(), 2) if len(set(p1.split(',')) & set(p2.split(','))) == 0])
