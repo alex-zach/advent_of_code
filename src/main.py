@@ -6,6 +6,7 @@ import requests
 
 from termcolor import colored
 from os import path
+from dotenv import load_dotenv
 
 INIT_CONTENT = 'from .main import *\n'
 EG_CONTENT = ''
@@ -26,6 +27,8 @@ class Challenge(ChallengeBase):
 '''
 
 INPUT_URL_FMT = 'https://adventofcode.com/{year}/day/{day}/input'
+LEVEL_URL_FMT = 'https://adventofcode.com/{year}/day/{day}'
+SUBMIT_URL_FMT = 'https://adventofcode.com/{year}/day/{day}/answer'
 
 available_years = list(sorted(os.listdir(path.join(path.dirname(__file__), 'challenges'))))
 
@@ -34,10 +37,12 @@ parser = argparse.ArgumentParser(description='Runs Advent of Code solutions', ad
 subparsers = parser.add_subparsers()
 
 run_parser = subparsers.add_parser('run')
+run_parser.add_argument('-s', '--session', help="Advent of code session cookie", nargs='?', default=None)
 run_parser.add_argument('-st', '--skip-test', help="Skips the tests", action='store_true')
 run_parser.add_argument('-sr', '--skip-run', help="Skips the run of the actual input", action='store_true')
+run_parser.add_argument('-ss', '--skip-submit', help="Skips the question if the result should be submitted", action='store_true')
 run_parser.add_argument('-ta', '--test-all', help="Runs all tests for all challenges", action='store_true')
-run_parser.add_argument('-y', '--year', help="Set the year", nargs=1, default=str(datetime.date.today().year), choices=available_years)
+run_parser.add_argument('-y', '--year', help="Set the year", type=str, default=str(datetime.date.today().year), choices=available_years)
 run_parser.add_argument('days', nargs='*', default=[str(datetime.date.today().day)], help="Days that should be executed, default is current day")
 
 create_parser = subparsers.add_parser('create')
@@ -55,7 +60,12 @@ def execute_run(args):
     if args.test_all:
         test_all(args.year)
     else:
-        run(args.year, args.days, not args.skip_test, not args.skip_run)
+        session = args.session
+        print(session)
+        if not session and 'AOC_SESSION' in os.environ:
+            session = os.environ['AOC_SESSION']
+        print(session)
+        run(args.year, args.days, not args.skip_test, not args.skip_run, not args.skip_submit, session)
 
 def execute_create(args):
     new_dir = path.join(path.dirname(__file__), 'challenges', args.year, f'day{args.day}')
@@ -113,7 +123,7 @@ def test_all(year):
     print(f'== {colored("passed", "green")}: {success}, {colored("failed", "red")}: {failed}, {colored("skipped", "yellow")}: {skipped} ==')
 
 
-def run(year, days, test, run):
+def run(year, days, test, run, submit, session):
     for day in days:
         if f'day{day}' not in list(sorted(os.listdir(path.join(path.dirname(__file__), 'challenges', year)))):
             print(f'== {colored(f"Day{day} not available", "yellow")} ==')
@@ -127,7 +137,43 @@ def run(year, days, test, run):
             if test:
                 result_list.append(c.test(prefix = '  '))
             if run:
-                c.run(prefix = '  ')
+                result = c.run(prefix = '  ')
+                if submit:
+                    if not session:
+                        print(f'  {colored("Skipping", "yellow")} submit since no session is provided')
+                    else:
+                        inp = input('  Submit [1|2|b(oth)|n(o)]: ').lower()
+                        submit_lvls = []
+                        if inp == '1' or inp in ['b', 'both']:
+                            submit_lvls.append(1)
+                        if inp == '2' or inp in ['b', 'both']:
+                            submit_lvls.append(2)
+                        for lvl in submit_lvls:
+                            print(f'    Submitting Level {lvl} ... ', end='')
+
+                            submit_response = requests.post(
+                                SUBMIT_URL_FMT.format(year=year, day=day),
+                                cookies={'session': session},
+                                headers={
+                                    'User-Agent': 'github.com/alex-zach/advent_of_code by alexander.zach1 (at) gmail.com',
+                                    'Referer': LEVEL_URL_FMT.format(year=year, day=day),
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                },
+                                data={
+                                    'level': lvl,
+                                    'answer': result[lvl-1].result
+                                }
+                            )
+
+                            if submit_response.ok:
+                                if "That's not the right answer." in submit_response.text:
+                                    print(f'{colored("incorrect solution", "yellow")}.')
+                                elif "You gave an answer too recently" in submit_response.text:
+                                    print(f'{colored("gave an answer to recently", "yellow")}.')
+                                else:
+                                    print(f'{colored("done", "green")}.')
+                            else:
+                                print(f'{colored("failed", "red")}.')
 
             if test:
                 flatresults = [r for results in result_list for result in results for r in result ]
@@ -138,4 +184,5 @@ def run(year, days, test, run):
             print()
 
 if __name__ == '__main__':
+    load_dotenv()
     main()
