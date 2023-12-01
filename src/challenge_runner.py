@@ -67,7 +67,7 @@ class ChallengeBase:
             lines = f.readlines()
             return self.parse_input(lines)
 
-    def _solve(self, input_name, eg):
+    def _solve(self, input_name, eg, skip1=False, skip2=False):
         inp = self._get_input(input_name)
         inp2 = deepcopy(inp)
 
@@ -81,15 +81,14 @@ class ChallengeBase:
         else:
             inp2 = (inp2,)
 
-
-        return timed(self.solve1)(*inp), timed(self.solve2)(*inp2)
+        return timed(self.solve1)(*inp) if not skip1 else Res(0,None), timed(self.solve2)(*inp2) if not skip2 else Res(0,None)
 
     def test(self, prefix="", output=True):
         solutions = []
         results = []
 
-        for file in self._eg_input_filenames:
-            solutions.append(self._solve(file, True))
+        for i, file in enumerate(self._eg_input_filenames):
+            solutions.append(self._solve(file, True, self._expected_eg_outputs[i][0] is None, self._expected_eg_outputs[i][1] is None))
             results.append([None, None])
 
         if output:
@@ -105,8 +104,10 @@ class ChallengeBase:
             else:
                 for case in range(len(solutions)):
                     if solutions[case][lvl].result is None:
-                        if output: 
+                        if output and self._expected_eg_outputs[case][lvl] is not None: 
                             print(f'{prefix}├── {lvl+1}{f"[Case {case+1}]" if len(solutions) > 1 else ""} {colored("skipped", "yellow")}')
+                        if self._expected_eg_outputs[case][lvl] is None:
+                            results[case][lvl] = -1
                     elif str(solutions[case][lvl].result) == str(self._expected_eg_outputs[case][lvl]):
                         if output:
                             print(f'{prefix}├── {lvl+1}{f"[Case {case+1}]" if len(solutions) > 1 else ""} {colored("passed", "green")} ({solutions[case][lvl].format_duration()})')
