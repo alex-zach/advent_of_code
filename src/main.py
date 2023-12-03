@@ -61,10 +61,8 @@ def execute_run(args):
         test_all(args.year)
     else:
         session = args.session
-        print(session)
         if not session and 'AOC_SESSION' in os.environ:
             session = os.environ['AOC_SESSION']
-        print(session)
         run(args.year, args.days, not args.skip_test, not args.skip_run, not args.skip_submit, session)
 
 def execute_create(args):
