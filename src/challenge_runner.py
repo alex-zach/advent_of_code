@@ -1,6 +1,5 @@
 from __future__ import annotations
 from copy import deepcopy
-from errno import E2BIG
 from functools import wraps
 from os import path
 from time import time

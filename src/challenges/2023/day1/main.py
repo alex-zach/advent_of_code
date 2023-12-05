@@ -1,3 +1,4 @@
+from dataclasses import replace
 import re
 
 from ....challenge_runner import ChallengeBase
@@ -23,18 +24,19 @@ class Challenge(ChallengeBase):
         return val
 
     def solve2(self, input):
-        possible_digits = ['one','two','three','four','five','six','seven','eight','nine']
+        rep = {'one': 'o1e', 'two': 't2o', 'three': 't3e', 'four': 'f4r', 'five': 'f5e', 'six': 's6x', 'seven': 's7n', 'eight': 'e8t', 'nine': 'n9e'}
         val = 0
+        zeroval = ord('0')
         for line in input:
-            digits = []
-            for i, c in enumerate(line):
+            for r in rep:
+                line = line.replace(r, rep[r])
+            for c in line:
                 if c.isdigit():
-                    digits.append(int(c))
-                for j, dig in enumerate(possible_digits):
-                    if c == dig[0] and line[i:i+len(dig)] == dig:
-                        digits.append(j+1)
-
-            val += digits[0] * 10 + digits[-1]
-
+                    val += (ord(c) - zeroval) * 10
+                    break
+            for c in line[::-1]:
+                if c.isdigit():
+                    val += ord(c) - zeroval
+                    break
         return val
 
