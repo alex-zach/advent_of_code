@@ -1,5 +1,6 @@
 .venv
 .pdm.toml
 .env
+input.txt
 
 __pycache__/
