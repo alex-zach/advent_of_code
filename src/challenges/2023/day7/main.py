@@ -1,3 +1,5 @@
+from copy import deepcopy
+import enum
 import functools
 import re
 
@@ -47,16 +49,34 @@ class Challenge(ChallengeBase):
         return 6
 
     def get_hand_score_with_jokers(self,hand):
-        hands = list(map(lambda c: [c] if c != 1 else list(range(2,11))+list(range(12,15)), hand))
-        max_score = 0
-        for c1 in hands[0]:
-            for c2 in hands[1]:
-                for c3 in hands[2]:
-                    for c4 in hands[3]: 
-                        for c5 in hands[4]:
-                            cur_hand = [c1, c2, c3, c4, c5]
-                            max_score = max(max_score, self.get_hand_score(cur_hand))
-        return max_score
+        cnt = [0] * 14
+        for c in hand:
+            cnt[c-1] += 1
+        if cnt[0] >= 4:
+            return 6 
+        if cnt[0] == 3:
+            if max(cnt[1:]) == 2:
+                return 6
+            return 5
+        if cnt[0] == 2:
+            max_reg = max(cnt[1:])
+            if max_reg == 3:
+                return 6
+            if max_reg == 2:
+                return 5
+            return 3
+        if cnt[0] == 1:
+            max_reg = max(cnt[1:])
+            if max_reg == 4:
+                return 6
+            if max_reg == 3:
+                return 5
+            if max_reg == 2:
+                if len(set(hand)) == 3:
+                    return 4
+                return 3
+            return 1
+        return self.get_hand_score(hand)
 
     def comp_func(self, el1, el2):
         hand1,score1,_ = el1
