@@ -39,7 +39,7 @@ def is_eg_param(func):
 
 
 class ChallengeBase:
-    def __init__(self, file, expected_eg_outputs, eg_input_filenames=None) -> None:
+    def __init__(self, file, expected_eg_outputs, eg_input_filenames=None, cached_solutions=None) -> None:
         self._dirname = path.dirname(file)
         self._challenge_name = f'{path.basename(path.dirname(self._dirname))}-{path.basename(self._dirname)}'
         self._eg_input_filenames = eg_input_filenames \
@@ -51,6 +51,8 @@ class ChallengeBase:
 
         if (len(self._expected_eg_outputs) != len(self._eg_input_filenames)):
             raise Exception('invalid eg params')
+
+        self._cached_solutions = cached_solutions if cached_solutions is not None else [None, None]
 
     def parse_input(self, lines):
         return None
@@ -135,7 +137,7 @@ class ChallengeBase:
                 if solution[lvl] is None: 
                     print(f'{prefix}├── {lvl+1} {colored("skipped", "yellow")}')
                 else:
-                    print(f'{prefix}├── {lvl+1} {colored(solution[lvl].result, "blue")} ({solution[lvl].format_duration()})')
+                    print(f'{prefix}├── {lvl+1} {colored(solution[lvl].result, "blue")} ({solution[lvl].format_duration()}) {colored(f"WARNING: cached solution is {self._cached_solutions[lvl]}", "yellow") if self._cached_solutions[lvl] is not None and self._cached_solutions[lvl] != solution[lvl].result else ""}')
             
             print()
 

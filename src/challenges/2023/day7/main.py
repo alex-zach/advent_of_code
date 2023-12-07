@@ -5,7 +5,7 @@ from ....challenge_runner import ChallengeBase
 
 class Challenge(ChallengeBase):
     def __init__(self):
-        super().__init__(__file__, ('6440', '5905'))
+        super().__init__(__file__, ('6440', '5905'), cached_solutions=(248836197, 251195607))
         
     def parse_input(self, lines):
         hand_bid = []
